@@ -1,0 +1,153 @@
+---
+title: "Implementasi Structural Equation Modeling Partial Least Square (SEM-PLS) pada Customer Behavior E-Commerce"
+author: Hulwah Fatin Fathinah (24031554007), Muhammad Khoirul Ilham (24031554193),
+  Firda Nurkhairani (24031554209)
+date: "2026-05-23"
+output: html_document
+---
+# Pendahuluan
+Penelitian ini bertujuan untuk menganalisis pengaruh Membership Type dan Discount Applied terhadap Customer Satisfaction dengan Average Rating sebagai variabel mediasi pada platform e-commerce menggunakan metode SEM-PLS.
+
+Metode yang digunakan adalah Structural Equation Modeling - Partial Least Squares (SEM-PLS).
+
+# Load Library
+```{r}
+library(seminr)
+library(readxl)
+```
+
+# Import Dataset
+```{r}
+data <- read.csv("E-commerce Customer Behavior - Sheet1.csv")
+```
+
+# Struktur Dataset
+```{r}
+names(data)
+str(data)
+head(data)
+```
+# Variabel yang digunakan
+```{r}
+data_sem <- data[, c(
+  "Membership.Type",
+  "Discount.Applied",
+  "Average.Rating",
+  "Satisfaction.Level"
+)]
+```
+# Melihat Isi Data
+```{r}
+unique(data_sem$Membership.Type)
+unique(data_sem$Satisfaction.Level)
+```
+# Preprocessing
+## Mengubah Membership Type Menjadi Numerik
+```{r}
+data_sem$Membership.Type <- as.numeric(factor(data_sem$Membership.Type,levels = c("Bronze", "Silver", "Gold")))
+```
+
+## Mengubah Satisfaction Level Menjadi Numerik
+
+```{r}
+data_sem$Satisfaction.Level <- as.numeric(factor(data_sem$Satisfaction.Level,levels = c("Unsatisfied", "Neutral", "Satisfied")))
+```
+
+## Mengubah Discount Applied Menjadi Numerik
+
+```{r}
+data_sem$Discount.Applied <- ifelse(data_sem$Discount.Applied == TRUE,1,0)
+```
+
+# Menghapus Missing Value
+```{r}
+data_sem <- na.omit(data_sem)
+```
+# Cek Struktur data
+
+```{r}
+ str(data_sem)
+```
+
+# Measurement Model
+```{r}
+measurement_model <- constructs(
+
+  composite(
+    "Membership",
+    single_item("Membership.Type")
+  ),
+
+  composite(
+    "Discount",
+    single_item("Discount.Applied")
+  ),
+
+  composite(
+    "Rating",
+    single_item("Average.Rating")
+  ),
+
+  composite(
+    "Satisfaction",
+    single_item("Satisfaction.Level")
+  )
+
+)
+```
+
+# Structural Model
+
+```{r}
+structural_model <- relationships(
+
+  paths(
+    from = c("Membership", "Discount"),
+    to = c("Rating", "Satisfaction")
+  ),
+
+  paths(
+    from = "Rating",
+    to = "Satisfaction"
+  )
+
+)
+```
+
+# Estimasi SEM-PLS
+```{r}
+pls_model <- estimate_pls(
+  data = data_sem,
+  measurement_model = measurement_model,
+  structural_model = structural_model
+)
+```
+
+# Hasil SEM-PLS
+```{r}
+summary(pls_model)
+```
+
+# Bootstrapping
+
+```{r}
+boot_model <- bootstrap_model(
+  seminr_model = pls_model,
+  nboot = 5000,
+  cores = 1
+)
+```
+
+# Hasil Bootstrapping
+
+```{r}
+summary(boot_model)
+```
+
+# Visualisasi Model
+```{r}
+plot(pls_model)
+```
+
+#  Kesimpulan
+Berdasarkan hasil analisis SEM-PLS, penelitian ini dapat digunakan untuk mengetahui pengaruh Membership Type dan Discount Applied terhadap Customer Satisfaction melalui Average Rating pada platform e-commerce.
